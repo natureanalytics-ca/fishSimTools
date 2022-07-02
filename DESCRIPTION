@@ -1,0 +1,13 @@
+Package: fishSimTools
+Title: Toolkit for using fishSimGTG
+Version: 0.0.0.9000
+Authors@R: 
+    person("William", "Harford", , "bill@natureanalytics.ca", role = c("aut", "cre"))
+Description: Toolkit for effecient analysis and sharing of results produced by fishSimGTG.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Imports: fishSimGTG 
+Depends: 
+    R (>= 4.0)
