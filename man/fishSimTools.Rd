@@ -8,6 +8,14 @@
 \description{
 Toolkit for effecient analysis and sharing of results produced by fishSimGTG.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/wharford/fishSimTools}
+  \item Report bugs at \url{https://github.com/wharford/fishSimTools/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: William Harford \email{bill@natureanalytics.ca}
 
