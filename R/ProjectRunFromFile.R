@@ -11,7 +11,7 @@
 #' @param inputDir  Where to look for the input file.
 #' @param inputFile The excel input file
 #' @param outputDir Where to put the output files
-#' @import fishSimGTG stringr
+#' @import fishSimGTG stringr readxl
 #' @export
 
 runProjectionExcel<-function(
@@ -103,25 +103,29 @@ runProjectionExcel<-function(
         #---Populate LifeHistory object for the specific sim loop
         #---Contains the life history parameters
         LifeHistoryObj <- new("LifeHistory")
-        LifeHistoryObj@title <- LifeHistory_base[LH_row,1]
-        LifeHistoryObj@speciesName <- LifeHistory_base[LH_row,2]
-        LifeHistoryObj@Linf <- set_numeric(LifeHistory_base[LH_row,3])
-        LifeHistoryObj@K <- set_numeric(LifeHistory_base[LH_row,4])
-        LifeHistoryObj@t0 <- set_numeric(LifeHistory_base[LH_row,5])
-        LifeHistoryObj@L50 <- set_numeric(LifeHistory_base[LH_row,6])
-        LifeHistoryObj@L95delta <- set_numeric(LifeHistory_base[LH_row,7])
-        LifeHistoryObj@M <- set_numeric(LifeHistory_base[LH_row,8])
-        LifeHistoryObj@L_type <- LifeHistory_base[LH_row,9]
-        LifeHistoryObj@L_units <- LifeHistory_base[LH_row,10]
-        LifeHistoryObj@LW_A <- set_numeric(LifeHistory_base[LH_row,11])
-        LifeHistoryObj@LW_B <- set_numeric(LifeHistory_base[LH_row,12])
-        LifeHistoryObj@Steep <- set_numeric(LifeHistory_base[LH_row,13])
-        LifeHistoryObj@isHermaph <- LifeHistory_base[LH_row,14]
+        if(!is.na(LifeHistory_base[LH_row,1])) LifeHistoryObj@title <- LifeHistory_base[LH_row,1]
+        if(!is.na(LifeHistory_base[LH_row,2])) LifeHistoryObj@speciesName <- LifeHistory_base[LH_row,2]
+        if(!is.na(LifeHistory_base[LH_row,3])) LifeHistoryObj@Linf <- set_numeric(LifeHistory_base[LH_row,3])
+        if(!is.na(LifeHistory_base[LH_row,4])) LifeHistoryObj@K <- set_numeric(LifeHistory_base[LH_row,4])
+        if(!is.na(LifeHistory_base[LH_row,5])) LifeHistoryObj@t0 <- set_numeric(LifeHistory_base[LH_row,5])
+        if(!is.na(LifeHistory_base[LH_row,6])) LifeHistoryObj@L50 <- set_numeric(LifeHistory_base[LH_row,6])
+        if(!is.na(LifeHistory_base[LH_row,7])) LifeHistoryObj@L95delta <- set_numeric(LifeHistory_base[LH_row,7])
+        if(!is.na(LifeHistory_base[LH_row,8])) LifeHistoryObj@M <- set_numeric(LifeHistory_base[LH_row,8])
+        if(!is.na(LifeHistory_base[LH_row,9])) LifeHistoryObj@L_type <- LifeHistory_base[LH_row,9]
+        if(!is.na(LifeHistory_base[LH_row,10])) LifeHistoryObj@L_units <- LifeHistory_base[LH_row,10]
+        if(!is.na(LifeHistory_base[LH_row,11])) LifeHistoryObj@LW_A <- set_numeric(LifeHistory_base[LH_row,11])
+        if(!is.na(LifeHistory_base[LH_row,12])) LifeHistoryObj@LW_B <- set_numeric(LifeHistory_base[LH_row,12])
+        if(!is.na(LifeHistory_base[LH_row,13])) LifeHistoryObj@Steep <- set_numeric(LifeHistory_base[LH_row,13])
+        if(!is.na(LifeHistory_base[LH_row,14])) LifeHistoryObj@isHermaph <- LifeHistory_base[LH_row,14]
         if(LifeHistoryObj@isHermaph == "TRUE"){
-          LifeHistoryObj@H50 <- set_numeric(LifeHistory_base[LH_row,15])
-          LifeHistoryObj@H95delta <- set_numeric(LifeHistory_base[LH_row,16])
+          if(!is.na(LifeHistory_base[LH_row,15])) LifeHistoryObj@H50 <- set_numeric(LifeHistory_base[LH_row,15])
+          if(!is.na(LifeHistory_base[LH_row,16])) LifeHistoryObj@H95delta <- set_numeric(LifeHistory_base[LH_row,16])
         }
-        LifeHistoryObj@recSD <- set_numeric(LifeHistory_base[LH_row,17])
+        if(!is.na(LifeHistory_base[LH_row,17])) LifeHistoryObj@recSD <- set_numeric(LifeHistory_base[LH_row,17])
+        if(!is.na(LifeHistory_base[LH_row,18])) LifeHistoryObj@recRho <- set_numeric(LifeHistory_base[LH_row,18])
+        if(!is.na(LifeHistory_base[LH_row,19])) LifeHistoryObj@Walpha_units <- LifeHistory_base[LH_row,19]
+        if(!is.na(LifeHistory_base[LH_row,20])) LifeHistoryObj@Tmax <- set_numeric(LifeHistory_base[LH_row,20])
+        if(!is.na(LifeHistory_base[LH_row,21])) LifeHistoryObj@R0 <- set_numeric(LifeHistory_base[LH_row,21])
       }else{
         stop("The referenced row of the Life History tab does not exist")
       }
@@ -264,7 +268,9 @@ runProjectionExcel<-function(
           }
 
           if(n %in% c("sameFisheryVul", "sameFisheryRet", "sameFisheryDmort")){
-            slot(StochasticObj, name = n) <- Stochastic_base[SO_row,n]
+            if(!is.na(Stochastic_base[SO_row,n])){
+              slot(StochasticObj, name = n) <- Stochastic_base[SO_row,n]
+            }
           }
 
           if(n %in% c("histFisheryVul", "histFisheryRet", "histFisheryDmort")){
@@ -322,7 +328,7 @@ runProjectionExcel<-function(
             ProFisheryObj@vulParams<-sapply(1:NROW(vulParams_TMP), function(x){
               set_numeric(vulParams_TMP[x])
             })
-            ProFisheryObj@retType <- Fishery_base[PF_row[x],5]
+            ProFisheryObj@retType <- Fishery_base[PF_row[x],4]
             if(ProFisheryObj@retType != "full"){
               retParams_TMP<-unlist(Fishery_base[PF_row[x],5] %>%
                                       str_replace_all(fixed(" "), "") %>%
@@ -411,6 +417,7 @@ runProjectionExcel<-function(
       }
 
       #Now that all objects have been initialized we can run the projection simulations
+      print(paste("########################## SIM:", i, "of", N_sims))
       runProjection(LifeHistoryObj = LifeHistoryObj,
                     TimeAreaObj = TimeAreaObj,
                     HistFisheryObj = HistFisheryObj,
