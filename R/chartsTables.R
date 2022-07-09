@@ -16,7 +16,7 @@
 #' @param proYear Numeric. The projection year used to calculate relative change in SSB and catch in weight.
 #' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @param imageName Character. A name for the resulting plot(s)
-#' @import ggplot2 ggrepel
+#' @import stats ggplot2 ggrepel
 #' @export
 
 relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 300, imageName = "Relative_SSB_catch"){
