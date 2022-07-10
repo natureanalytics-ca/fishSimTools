@@ -51,15 +51,65 @@ relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 
     }
   }
 
+  print(NROW(unique(totalSSB$fct)))
   #Total relative SSB
   ggplot(totalSSB, aes(catchB_median, SSB_median)) +
-    geom_vline(xintercept = 1, color="lightgrey") +
-    geom_hline(yintercept = 1, colour="lightgrey") +
+
+    geom_rect(
+      aes(
+      xmin = 0,
+      xmax = 1,
+      ymin = 0,
+      ymax = 1
+      ),
+      color = "grey",
+      fill = "pink",
+      alpha = 0.1
+    ) +
+
+    geom_rect(
+      aes(
+      xmin = 0,
+      xmax = 1,
+      ymin = 1,
+      ymax = max(max(SSB_median)+0.1, 2)
+      ),
+      color = "grey",
+      fill = "yellow",
+      alpha = 0.05
+    ) +
+
+    geom_rect(
+      aes(
+      xmin = 1,
+      xmax = max(max(catchB_median)+0.1,2),
+      ymin = 0,
+      ymax = 1
+      ),
+      color = "grey",
+      fill = "yellow",
+      alpha = 0.05
+    ) +
+
+    geom_rect(
+      aes(
+      xmin = 1,
+      xmax = max(max(catchB_median)+0.1,2),
+      ymin = 1,
+      ymax = max(max(SSB_median)+0.1,2),
+      ),
+      color = "grey",
+      fill = "green",
+      alpha = 0.1
+    ) +
+
+    #geom_vline(xintercept = 1, color="lightgrey") +
+    #geom_hline(yintercept = 1, colour="lightgrey") +
     geom_point(size=1) +
     geom_label_repel(data=totalSSB,
                     aes(catchB_median, SSB_median, label = nm),
                     fontface = 'bold',
-                    color="cornflowerblue",
+                    color="black",
                     size=2,
                     segment.size = 0.1,
                     segment.color = "black",
@@ -75,9 +125,10 @@ relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 
           strip.text.y=element_text(colour = "black", size=8, face="bold"),
           strip.background = element_rect(fill ="lightgrey"),
           axis.text=element_text(size=6),
-          panel.border = element_rect(linetype = "solid", colour = "black", fill=NA))+
-    facet_wrap(~fct, ncol=2)
-  ggsave(filename = paste0(wd, "/", imageName, ".png"), device = "png", dpi = dpi, width = 6, height = (3*NROW(unique(totalSSB$fct))/2), units = "in")
+          panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
+          legend.position = "none") +
+  facet_wrap(~fct, ncol=2)
+  ggsave(filename = paste0(wd, "/", imageName, ".png"), device = "png", dpi = dpi, width = min(6*NROW(unique(totalSSB$fct)),7), height = max((3*NROW(unique(totalSSB$fct))/2),4), units = "in")
 }
 
 #---------------------------------------
@@ -93,7 +144,7 @@ relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 
 #' @param fileName List. List of file names in the working directory
 #' @param facetName List. Plot uses ggplot2 facets. File names can be assigned to facets, thus producing separate plots for a given facet, such a low M scenario vs. a high M scenario.
 #' @param chooseArea The area to summarized in the plot. Value of 0 sums quantities across all areas
-#' @param percentile Vector of length two indicating centered percent of observations to represent uncertainty in time series plots. For example, 95% centered observations should be entered as c(0.025, 0.975)
+#' @param percentileOuter Vector of length two indicating centered percent of observations to represent uncertainty in time series plots. For example, 95% centered observations should be entered as c(0.025, 0.975)
 #' @param doHist Should the historical time period be included in the plot?
 #' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @param imageName Character. A name for the resulting plot(s)
@@ -102,18 +153,22 @@ relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 
 #' @importFrom stats quantile
 #' @export
 
-relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentile = c(0.025, 0.975), doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
+relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentileOuter = c(0.025, 0.975), percentileInner = c(0.25, 0.75), doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
 
   year<-med<-lower<-upper<-NULL
 
   totalSSB<-data.frame()
   totalcatchB<-data.frame()
+  labelVec<-vector()
+
   for(i in 1:NROW(fileName)){
 
     data<-readRDS(paste0(wd, "/", fileName[[i]],".rds"))
     refYear <- 1 + data$TimeAreaObj@historicalYears
     startYear <- ifelse(doHist, 1, refYear)
     endYear <- 1 + data$TimeAreaObj@historicalYears + data$StrategyObj@projectionYears
+    id <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3"))
+    labelVec<-append(labelVec, setNames(data$titleStrategy, id), after=length(labelVec))
 
     #Choose area
     if(chooseArea == 0) { #Sum across areas
@@ -134,21 +189,48 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentile = c(0
       })
     }
 
-    SSB_range<-t(sapply(1:NROW(SSB_tmp), FUN=function(x){
-      c(quantile(SSB_tmp[x,], probs =  percentile), median(SSB_tmp[x,]), x)
+    SSB_range_outer<-t(sapply(1:NROW(SSB_tmp), FUN=function(x){
+      c(quantile(SSB_tmp[x,], probs =  percentileOuter), median(SSB_tmp[x,]), x)
     }))
-    totalSSB<-rbind(totalSSB, list(fct = rep(facetName[[i]], NROW(SSB_range)), nm = rep(data$titleStrategy, NROW(SSB_range)), lower =  SSB_range[,1], upper = SSB_range[,2], med = SSB_range[,3], year = SSB_range[,4]))
+    SSB_range_inner<-t(sapply(1:NROW(SSB_tmp), FUN=function(x){
+      c(quantile(SSB_tmp[x,], probs =  percentileInner))
+    }))
+    totalSSB<-rbind(totalSSB, list(
+      fct = rep(facetName[[i]], NROW(SSB_range_outer)),
+      nm = rep(id, NROW(SSB_range_outer)),
+      lowerOuter =  SSB_range_outer[,1],
+      upperOuter = SSB_range_outer[,2],
+      lowerInner =  SSB_range_inner[,1],
+      upperInner = SSB_range_inner[,2],
+      med = SSB_range_outer[,3],
+      year = SSB_range_outer[,4]))
 
-    cat_range<-t(sapply(1:NROW(cat_tmp), FUN=function(x){
-      c(quantile(cat_tmp[x,], probs =  percentile), median(cat_tmp[x,]), x)
+    cat_range_outer<-t(sapply(1:NROW(cat_tmp), FUN=function(x){
+      c(quantile(cat_tmp[x,], probs =  percentileOuter), median(cat_tmp[x,]), x)
     }))
-    totalcatchB<-rbind(totalcatchB, list(fct = rep(facetName[[i]], NROW(cat_range)), nm = rep(data$titleStrategy, NROW(cat_range)), lower =  cat_range[,1], upper = cat_range[,2], med = cat_range[,3], year = cat_range[,4]))
+    cat_range_inner<-t(sapply(1:NROW(cat_tmp), FUN=function(x){
+      c(quantile(cat_tmp[x,], probs =  percentileInner))
+    }))
+    totalcatchB<-rbind(totalcatchB, list(
+      fct = rep(facetName[[i]], NROW(cat_range_outer)),
+      nm = rep(id, NROW(cat_range_outer)),
+      lowerOuter =  cat_range_outer[,1],
+      upperOuter = cat_range_outer[,2],
+      lowerInner =  cat_range_inner[,1],
+      upperInner = cat_range_inner[,2],
+      med = cat_range_outer[,3],
+      year = cat_range_outer[,4]))
   }
+
+  outerLab<-paste0(as.character(round(100*(percentileOuter[2]-percentileOuter[1]),1)), "% of outcomes")
+  innerLab<-paste0(as.character(round(100*(percentileInner[2]-percentileInner[1]),1)), "% of outcomes")
+  colors <- c(fill1 = "cadetblue3", fill2 = "lightcyan2")
 
   #Total relative SSB
   ggplot(totalSSB, aes(x = year, y = med)) +
-    geom_line(color = "cornflowerblue") +
-    geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.1) +
+    geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill2")) +
+    geom_ribbon(aes(ymin = lowerInner, ymax = upperInner, fill = "fill1")) +
+    geom_line(size = 0.8, color='black') +
     ylab("Relative biomass") +
     xlab("Year") +
     theme_classic() +
@@ -156,14 +238,21 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentile = c(0
           strip.text.y=element_text(colour = "black", size=8, face="bold"),
           strip.background = element_rect(fill ="lightgrey"),
           axis.text=element_text(size=6),
-          panel.border = element_rect(linetype = "solid", colour = "black", fill=NA)) +
-    facet_wrap(~ fct + nm, ncol=NROW(unique(totalSSB$nm)), scales = scales)
-  ggsave(filename = paste0(wd, "/", imageName, "_SSB.png"), device = "png", dpi = dpi, width = 6, height = 3.5*NROW(unique(totalSSB$fct)), units = "in")
+          panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
+          legend.position = "bottom"
+    ) +
+    facet_wrap(~ fct + nm, ncol=NROW(unique(totalSSB$nm)), scales = scales, labeller = labeller(nm = labelVec)) +
+    scale_fill_manual(name = "Uncertainty in outcomes",
+                      values = colors,
+                      labels = c(innerLab, outerLab))
+  ggsave(filename = paste0(wd, "/", imageName, "_SSB.png"), device = "png", dpi = dpi, width = 8, height = 3.5*NROW(unique(totalSSB$fct)), units = "in")
 
   #Total relative catch weight
   ggplot(totalcatchB, aes(x = year, y = med)) +
-    geom_line(color = "cornflowerblue") +
-    geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.1) +
+
+    geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill2")) +
+    geom_ribbon(aes(ymin = lowerInner, ymax = upperInner, fill = "fill1")) +
+    geom_line(size = 0.8, color='black') +
     ylab("Relative catch weight") +
     xlab("Year") +
     theme_classic() +
@@ -171,8 +260,14 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentile = c(0
           strip.text.y=element_text(colour = "black", size=8, face="bold"),
           strip.background = element_rect(fill ="lightgrey"),
           axis.text=element_text(size=6),
-          panel.border = element_rect(linetype = "solid", colour = "black", fill=NA)) +
-    facet_wrap(~ fct + nm, ncol=NROW(unique(totalcatchB$nm)), scales = scales)
-  ggsave(filename = paste0(wd, "/", imageName, "_catchB.png"), device = "png", dpi = dpi, width = 6, height = 3.5*NROW(unique(totalcatchB$fct)), units = "in")
+          panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
+          legend.position = "bottom"
+    ) +
+    facet_wrap(~ fct + nm, ncol=NROW(unique(totalcatchB$nm)), scales = scales, labeller = labeller(nm = labelVec)) +
+    scale_fill_manual(name = "Uncertainty in outcomes",
+                      values = colors,
+                      labels = c(innerLab, outerLab))
+
+  ggsave(filename = paste0(wd, "/", imageName, "_catchB.png"), device = "png", dpi = dpi, width = 8, height = 3.5*NROW(unique(totalcatchB$fct)), units = "in")
 }
 

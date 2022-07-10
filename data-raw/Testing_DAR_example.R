@@ -1,6 +1,7 @@
 
 
 library(fishSimGTG)
+#library(fishSimTools)
 devtools::load_all()
 library(here)
 #--------------
@@ -27,6 +28,8 @@ relSSBscatter(wd =  here("data-raw", "Kala_noUncertainty"),
                 "Lower_option3"
               ),
               facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3))),
+              #facetName = c(as.list(rep("Higher biomass scenario", 6))),
+
               chooseArea = 0,
               proYear = 50)
 
@@ -40,10 +43,12 @@ relSSBseries(wd =  here("data-raw", "Kala_noUncertainty"),
                "Lower_option2",
                "Lower_option3"
              ),
-             facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3))),
+             #facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3))),
+             facetName = c(as.list(rep("Higher biomass scenario", 6))),
              chooseArea = 0,
-             percentile = c(0.025, 0.975),
-             doHist = TRUE,
+             percentileOuter = c(0.025, 0.975),
+             percentileInner = c(0.25, 0.75),
+             doHist = FALSE,
              dpi = 300)
 
 
