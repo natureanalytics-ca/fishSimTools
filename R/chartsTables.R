@@ -137,7 +137,7 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
 #---------------------------------------
 
 #Roxygen header
-#'Relative change in biomass vs. relative catch scatter plot
+#'Relative change in biomass and relative catch as time series with uncertainty
 #'
 #'Time series of changes in spawning stock biomass and catch weight (two separate plots produced) relative to the year prior to projection time period. Saves a chart to the wd. Examples can be found in data-raw/DAR_projection_example.R
 #'
@@ -273,5 +273,99 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
                       labels = c(innerLab, outerLab))
 
   ggsave(filename = paste0(wd, "/", imageName, "_catchB.png"), device = "png", dpi = dpi, width = 8, height = 3.5*NROW(unique(totalcatchB$fct)), units = "in")
+}
+
+
+#---------------------------------------
+#Retained biomass or CPUE time series
+#---------------------------------------
+
+#Roxygen header
+#'Relative change in retained biomass (e.g., vulnerable biomass above size limit) with uncertainty
+#'
+#' @param wd A working directly where the output of runProjection is saved
+#' @param fileName List. List of file names in the working directory
+#' @param facetName List. Plot uses ggplot2 facets. File names can be assigned to facets, thus producing separate plots for a given facet, such a low M scenario vs. a high M scenario.
+#' @param newLabel List. Replacement label for each file.
+#' @param chooseArea The area to summarized in the plot. Value of 0 sums quantities across all areas
+#' @param percentileOuter Vector of length two indicating centered percent of observations to represent uncertainty in time series plots. For example, 95% centered observations should be entered as c(0.025, 0.975)
+#' @param doHist Should the historical time period be included in the plot?
+#' @param dpi Resolution in dots per inch of the resulting saved chart.
+#' @param imageName Character. A name for the resulting plot(s)
+#' @param scales From ggplot2::facet_wrap Should scales be fixed ("fixed", the default), free ("free"), or free in one dimension ("free_x", "free_y")?
+#' @import ggplot2 ggrepel
+#' @importFrom stats quantile
+#' @export
+
+retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentileOuter = c(0.025, 0.975), percentileInner = c(0.25, 0.75), doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
+
+  year<-med<-lower<-upper<-NULL
+
+  totalB<-data.frame()
+  labelVec<-vector()
+
+  for(i in 1:NROW(fileName)){
+
+    data<-readRDS(paste0(wd, "/", fileName[[i]],".rds"))
+    refYear <- 1 + data$TimeAreaObj@historicalYears
+    startYear <- ifelse(doHist, 1, refYear)
+    endYear <- 1 + data$TimeAreaObj@historicalYears + data$StrategyObj@projectionYears
+    id <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3"))
+    labelVec<-append(labelVec, setNames(ifelse(is.null(newLabel[[i]]), data$titleStrategy, newLabel[[i]]), id), after=length(labelVec))
+
+    #Choose area
+    if(chooseArea == 0) { #Sum across areas
+      B_tmp<-sapply(1:data$TimeAreaObj@iterations, FUN=function(x){
+        rowSums(data$dynamics$RB[startYear:endYear,x,])/sum(data$dynamics$RB[refYear,x,])
+      })
+    } else { #Specific area selected by user
+      B_tmp<-sapply(1:data$TimeAreaObj@iterations, FUN=function(x){
+        data$dynamics$RB[startYear:endYear,x,chooseArea]/data$dynamics$RB[refYear,x,chooseArea]
+      })
+    }
+
+    B_range_outer<-t(sapply(1:NROW(B_tmp), FUN=function(x){
+      c(quantile(B_tmp[x,], probs =  percentileOuter), median(B_tmp[x,]), x)
+    }))
+    B_range_inner<-t(sapply(1:NROW(B_tmp), FUN=function(x){
+      c(quantile(B_tmp[x,], probs =  percentileInner))
+    }))
+    totalB<-rbind(totalB, list(
+      fct = rep(facetName[[i]], NROW(B_range_outer)),
+      nm = rep(id, NROW(B_range_outer)),
+      lowerOuter =  B_range_outer[,1],
+      upperOuter = B_range_outer[,2],
+      lowerInner =  B_range_inner[,1],
+      upperInner = B_range_inner[,2],
+      med = B_range_outer[,3],
+      year = B_range_outer[,4]))
+  }
+
+  outerLab<-paste0(as.character(round(100*(percentileOuter[2]-percentileOuter[1]),1)), "% of outcomes")
+  innerLab<-paste0(as.character(round(100*(percentileInner[2]-percentileInner[1]),1)), "% of outcomes")
+  colors <- c(fill1 = "cadetblue3", fill2 = "lightcyan2")
+
+  #Total relative SSB
+  ggplot(totalB, aes(x = year, y = med)) +
+    geom_hline(yintercept = 1, colour="lightgrey") +
+    geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill2")) +
+    geom_ribbon(aes(ymin = lowerInner, ymax = upperInner, fill = "fill1")) +
+    geom_line(size = 0.8, color='black') +
+    ylab("Relative biomass") +
+    xlab("Year") +
+    theme_classic() +
+    theme(strip.text.x=element_text(colour = "black", size=8, face="bold"),
+          strip.text.y=element_text(colour = "black", size=8, face="bold"),
+          strip.background = element_rect(fill ="lightgrey"),
+          axis.text=element_text(size=6),
+          panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
+          legend.position = "bottom"
+    ) +
+    #ncol=NROW(unique(totalSSB$nm)),
+    facet_wrap(~ fct + nm,  nrow = NROW(unique(totalB$fct)), scales = scales, labeller = labeller(nm = labelVec)) +
+    scale_fill_manual(name = "Uncertainty in outcomes",
+                      values = colors,
+                      labels = c(innerLab, outerLab))
+  ggsave(filename = paste0(wd, "/", imageName, "_retainBio.png"), device = "png", dpi = dpi, width = 8, height = 3.5*NROW(unique(totalB$fct)), units = "in")
 }
 
