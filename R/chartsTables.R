@@ -12,6 +12,7 @@
 #' @param wd A working directly where the output of runProjection is saved
 #' @param fileName List. List of file names in the working directory
 #' @param facetName List. Plot uses ggplot2 facets. File names can be assigned to facets, thus producing separate plots for a given facet, such a low M scenario vs. a high M scenario.
+#' @param newLabel List. Replacement label for each file.
 #' @param chooseArea The area to summarized in the plot. Value of 0 sums quantities across all areas
 #' @param proYear Numeric. The projection year used to calculate relative change in SSB and catch in weight.
 #' @param dpi Resolution in dots per inch of the resulting saved chart.
@@ -19,7 +20,7 @@
 #' @import stats ggplot2 ggrepel
 #' @export
 
-relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 300, imageName = "Relative_SSB_catch"){
+relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, proYear, dpi = 300, imageName = "Relative_SSB_catch"){
 
   catchB_median<-SSB_median<-nm<-NULL
 
@@ -39,7 +40,7 @@ relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 
       cat_tmp<-sapply(1:data$TimeAreaObj@iterations, FUN=function(x){
         sum(data$dynamics$catchB[getYear,x,]) / sum(data$dynamics$catchB[refYear,x,])
       })
-      totalSSB<-rbind(totalSSB, list(fct = facetName[[i]], nm = data$titleStrategy, SSB_median = median(SSB_tmp), catchB_median = median(cat_tmp)))
+      totalSSB<-rbind(totalSSB, list(fct = facetName[[i]], nm = ifelse(is.null(newLabel[[i]]), data$titleStrategy, newLabel[[i]]), SSB_median = median(SSB_tmp), catchB_median = median(cat_tmp)))
     } else {#Specific area selected by user
       SSB_tmp<-sapply(1:data$TimeAreaObj@iterations, FUN=function(x){
         data$dynamics$SB[getYear,x,chooseArea] / data$dynamics$SB[refYear,x,chooseArea]
@@ -47,7 +48,7 @@ relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 
       cat_tmp<-sapply(1:data$TimeAreaObj@iterations, FUN=function(x){
         data$dynamics$catchB[getYear,x,chooseArea] / data$dynamics$catchB[refYear,x,chooseArea]
       })
-      totalSSB<-rbind(totalSSB, list(fct = facetName[[i]], nm = data$titleStrategy, SSB_median = median(SSB_tmp), catchB_median = median(cat_tmp)))
+      totalSSB<-rbind(totalSSB, list(fct = facetName[[i]], nm = ifelse(is.null(newLabel[[i]]), data$titleStrategy, newLabel[[i]]), SSB_median = median(SSB_tmp), catchB_median = median(cat_tmp)))
     }
   }
 
@@ -143,6 +144,7 @@ relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 
 #' @param wd A working directly where the output of runProjection is saved
 #' @param fileName List. List of file names in the working directory
 #' @param facetName List. Plot uses ggplot2 facets. File names can be assigned to facets, thus producing separate plots for a given facet, such a low M scenario vs. a high M scenario.
+#' @param newLabel List. Replacement label for each file.
 #' @param chooseArea The area to summarized in the plot. Value of 0 sums quantities across all areas
 #' @param percentileOuter Vector of length two indicating centered percent of observations to represent uncertainty in time series plots. For example, 95% centered observations should be entered as c(0.025, 0.975)
 #' @param doHist Should the historical time period be included in the plot?
@@ -153,7 +155,7 @@ relSSBscatter<-function(wd, fileName, facetName, chooseArea = 0, proYear, dpi = 
 #' @importFrom stats quantile
 #' @export
 
-relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentileOuter = c(0.025, 0.975), percentileInner = c(0.25, 0.75), doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
+relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentileOuter = c(0.025, 0.975), percentileInner = c(0.25, 0.75), doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
 
   year<-med<-lower<-upper<-NULL
 
@@ -168,7 +170,7 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentileOuter 
     startYear <- ifelse(doHist, 1, refYear)
     endYear <- 1 + data$TimeAreaObj@historicalYears + data$StrategyObj@projectionYears
     id <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3"))
-    labelVec<-append(labelVec, setNames(data$titleStrategy, id), after=length(labelVec))
+    labelVec<-append(labelVec, setNames(ifelse(is.null(newLabel[[i]]), data$titleStrategy, newLabel[[i]]), id), after=length(labelVec))
 
     #Choose area
     if(chooseArea == 0) { #Sum across areas
@@ -228,6 +230,7 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentileOuter 
 
   #Total relative SSB
   ggplot(totalSSB, aes(x = year, y = med)) +
+    geom_hline(yintercept = 1, colour="lightgrey") +
     geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill2")) +
     geom_ribbon(aes(ymin = lowerInner, ymax = upperInner, fill = "fill1")) +
     geom_line(size = 0.8, color='black') +
@@ -241,7 +244,8 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentileOuter 
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
           legend.position = "bottom"
     ) +
-    facet_wrap(~ fct + nm, ncol=NROW(unique(totalSSB$nm)), scales = scales, labeller = labeller(nm = labelVec)) +
+    #ncol=NROW(unique(totalSSB$nm)),
+    facet_wrap(~ fct + nm,  nrow = NROW(unique(totalSSB$fct)), scales = scales, labeller = labeller(nm = labelVec)) +
     scale_fill_manual(name = "Uncertainty in outcomes",
                       values = colors,
                       labels = c(innerLab, outerLab))
@@ -249,7 +253,7 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentileOuter 
 
   #Total relative catch weight
   ggplot(totalcatchB, aes(x = year, y = med)) +
-
+    geom_hline(yintercept = 1, colour="lightgrey") +
     geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill2")) +
     geom_ribbon(aes(ymin = lowerInner, ymax = upperInner, fill = "fill1")) +
     geom_line(size = 0.8, color='black') +
@@ -263,7 +267,7 @@ relSSBseries<-function(wd, fileName, facetName, chooseArea = 0, percentileOuter 
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
           legend.position = "bottom"
     ) +
-    facet_wrap(~ fct + nm, ncol=NROW(unique(totalcatchB$nm)), scales = scales, labeller = labeller(nm = labelVec)) +
+    facet_wrap(~ fct + nm, nrow = NROW(unique(totalSSB$fct)),  scales = scales, labeller = labeller(nm = labelVec)) +
     scale_fill_manual(name = "Uncertainty in outcomes",
                       values = colors,
                       labels = c(innerLab, outerLab))
