@@ -146,7 +146,10 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
 #' @param facetName List. Plot uses ggplot2 facets. File names can be assigned to facets, thus producing separate plots for a given facet, such a low M scenario vs. a high M scenario.
 #' @param newLabel List. Replacement label for each file.
 #' @param chooseArea The area to summarized in the plot. Value of 0 sums quantities across all areas
-#' @param percentileOuter Vector of length two indicating centered percent of observations to represent uncertainty in time series plots. For example, 95% centered observations should be entered as c(0.025, 0.975)
+#' @param percentile Vector of length two indicating centered percent of observations to represent uncertainty in time series plots. For example, 95% centered observations should be entered as c(0.025, 0.975)
+#' @param percentileColor Color for the centered distribution of outcomes.
+#' @param percentileAlpha Transparency param (between 0 and 1) for the percentile color
+#' @param lineColor Color of the median trend line.
 #' @param doHist Should the historical time period be included in the plot?
 #' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @param imageName Character. A name for the resulting plot(s)
@@ -155,7 +158,7 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
 #' @importFrom stats quantile
 #' @export
 
-relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentileOuter = c(0.025, 0.975), percentileInner = c(0.25, 0.75), doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
+relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
 
   year<-med<-lower<-upper<-NULL
 
@@ -192,48 +195,36 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
     }
 
     SSB_range_outer<-t(sapply(1:NROW(SSB_tmp), FUN=function(x){
-      c(quantile(SSB_tmp[x,], probs =  percentileOuter), median(SSB_tmp[x,]), x)
+      c(quantile(SSB_tmp[x,], probs =  percentile), median(SSB_tmp[x,]), x)
     }))
-    SSB_range_inner<-t(sapply(1:NROW(SSB_tmp), FUN=function(x){
-      c(quantile(SSB_tmp[x,], probs =  percentileInner))
-    }))
+
     totalSSB<-rbind(totalSSB, list(
       fct = rep(facetName[[i]], NROW(SSB_range_outer)),
       nm = rep(id, NROW(SSB_range_outer)),
       lowerOuter =  SSB_range_outer[,1],
       upperOuter = SSB_range_outer[,2],
-      lowerInner =  SSB_range_inner[,1],
-      upperInner = SSB_range_inner[,2],
       med = SSB_range_outer[,3],
       year = SSB_range_outer[,4]))
 
     cat_range_outer<-t(sapply(1:NROW(cat_tmp), FUN=function(x){
-      c(quantile(cat_tmp[x,], probs =  percentileOuter), median(cat_tmp[x,]), x)
+      c(quantile(cat_tmp[x,], probs =  percentile), median(cat_tmp[x,]), x)
     }))
-    cat_range_inner<-t(sapply(1:NROW(cat_tmp), FUN=function(x){
-      c(quantile(cat_tmp[x,], probs =  percentileInner))
-    }))
+
     totalcatchB<-rbind(totalcatchB, list(
       fct = rep(facetName[[i]], NROW(cat_range_outer)),
       nm = rep(id, NROW(cat_range_outer)),
       lowerOuter =  cat_range_outer[,1],
       upperOuter = cat_range_outer[,2],
-      lowerInner =  cat_range_inner[,1],
-      upperInner = cat_range_inner[,2],
       med = cat_range_outer[,3],
       year = cat_range_outer[,4]))
-  }
 
-  outerLab<-paste0(as.character(round(100*(percentileOuter[2]-percentileOuter[1]),1)), "% of outcomes")
-  innerLab<-paste0(as.character(round(100*(percentileInner[2]-percentileInner[1]),1)), "% of outcomes")
-  colors <- c(fill1 = "cadetblue3", fill2 = "lightcyan2")
+  }
 
   #Total relative SSB
   ggplot(totalSSB, aes(x = year, y = med)) +
     geom_hline(yintercept = 1, colour="lightgrey") +
-    geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill2")) +
-    geom_ribbon(aes(ymin = lowerInner, ymax = upperInner, fill = "fill1")) +
-    geom_line(size = 0.8, color='black') +
+    geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill1"), alpha = percentileAlpha) +
+    geom_line(size = 0.8, aes(color='line1')) +
     ylab("Relative biomass") +
     xlab("Year") +
     theme_classic() +
@@ -246,17 +237,20 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
     ) +
     #ncol=NROW(unique(totalSSB$nm)),
     facet_wrap(~ fct + nm,  nrow = NROW(unique(totalSSB$fct)), scales = scales, labeller = labeller(nm = labelVec)) +
-    scale_fill_manual(name = "Uncertainty in outcomes",
-                      values = colors,
-                      labels = c(innerLab, outerLab))
-  ggsave(filename = paste0(wd, "/", imageName, "_SSB.png"), device = "png", dpi = dpi, width = 8, height = 3.5*NROW(unique(totalSSB$fct)), units = "in")
+    scale_color_manual(name = "",
+                       values = c(line1 = lineColor),
+                       labels = "Median")+
+    scale_fill_manual(name = "",
+                      values = c(fill1 = percentileColor),
+                      labels = paste0(as.character(round(100*(percentile[2]-percentile[1]),1)), "% of outcomes"))
+
+  ggsave(filename = paste0(wd, "/", imageName, "_SSB.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalSSB$fct)),8), height = 3.5*NROW(unique(totalSSB$fct)), units = "in")
 
   #Total relative catch weight
   ggplot(totalcatchB, aes(x = year, y = med)) +
     geom_hline(yintercept = 1, colour="lightgrey") +
-    geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill2")) +
-    geom_ribbon(aes(ymin = lowerInner, ymax = upperInner, fill = "fill1")) +
-    geom_line(size = 0.8, color='black') +
+    geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill1"), alpha = percentileAlpha) +
+    geom_line(size = 0.8, aes(color='line1')) +
     ylab("Relative catch weight") +
     xlab("Year") +
     theme_classic() +
@@ -268,11 +262,13 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
           legend.position = "bottom"
     ) +
     facet_wrap(~ fct + nm, nrow = NROW(unique(totalSSB$fct)),  scales = scales, labeller = labeller(nm = labelVec)) +
-    scale_fill_manual(name = "Uncertainty in outcomes",
-                      values = colors,
-                      labels = c(innerLab, outerLab))
-
-  ggsave(filename = paste0(wd, "/", imageName, "_catchB.png"), device = "png", dpi = dpi, width = 8, height = 3.5*NROW(unique(totalcatchB$fct)), units = "in")
+    scale_color_manual(name = "",
+                       values = c(line1 = lineColor),
+                       labels = "Median")+
+    scale_fill_manual(name = "",
+                      values = c(fill1 = percentileColor),
+                      labels = paste0(as.character(round(100*(percentile[2]-percentile[1]),1)), "% of outcomes"))
+  ggsave(filename = paste0(wd, "/", imageName, "_catchB.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalSSB$fct)),8), height = 3.5*NROW(unique(totalcatchB$fct)), units = "in")
 }
 
 
@@ -288,7 +284,10 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
 #' @param facetName List. Plot uses ggplot2 facets. File names can be assigned to facets, thus producing separate plots for a given facet, such a low M scenario vs. a high M scenario.
 #' @param newLabel List. Replacement label for each file.
 #' @param chooseArea The area to summarized in the plot. Value of 0 sums quantities across all areas
-#' @param percentileOuter Vector of length two indicating centered percent of observations to represent uncertainty in time series plots. For example, 95% centered observations should be entered as c(0.025, 0.975)
+#' @param percentile Vector of length two indicating centered percent of observations to represent uncertainty in time series plots. For example, 95% centered observations should be entered as c(0.025, 0.975)
+#' @param percentileColor Color for the centered distribution of outcomes.
+#' @param percentileAlpha Transparency param (between 0 and 1) for the percentile color
+#' @param lineColor Color of the median trend line.
 #' @param doHist Should the historical time period be included in the plot?
 #' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @param imageName Character. A name for the resulting plot(s)
@@ -297,7 +296,7 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
 #' @importFrom stats quantile
 #' @export
 
-retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentileOuter = c(0.025, 0.975), percentileInner = c(0.25, 0.75), doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
+retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
 
   year<-med<-lower<-upper<-NULL
 
@@ -325,32 +324,23 @@ retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea =
     }
 
     B_range_outer<-t(sapply(1:NROW(B_tmp), FUN=function(x){
-      c(quantile(B_tmp[x,], probs =  percentileOuter), median(B_tmp[x,]), x)
+      c(quantile(B_tmp[x,], probs =  percentile), median(B_tmp[x,]), x)
     }))
-    B_range_inner<-t(sapply(1:NROW(B_tmp), FUN=function(x){
-      c(quantile(B_tmp[x,], probs =  percentileInner))
-    }))
+
     totalB<-rbind(totalB, list(
       fct = rep(facetName[[i]], NROW(B_range_outer)),
       nm = rep(id, NROW(B_range_outer)),
       lowerOuter =  B_range_outer[,1],
       upperOuter = B_range_outer[,2],
-      lowerInner =  B_range_inner[,1],
-      upperInner = B_range_inner[,2],
       med = B_range_outer[,3],
       year = B_range_outer[,4]))
   }
 
-  outerLab<-paste0(as.character(round(100*(percentileOuter[2]-percentileOuter[1]),1)), "% of outcomes")
-  innerLab<-paste0(as.character(round(100*(percentileInner[2]-percentileInner[1]),1)), "% of outcomes")
-  colors <- c(fill1 = "cadetblue3", fill2 = "lightcyan2")
-
   #Total relative SSB
   ggplot(totalB, aes(x = year, y = med)) +
     geom_hline(yintercept = 1, colour="lightgrey") +
-    geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill2")) +
-    geom_ribbon(aes(ymin = lowerInner, ymax = upperInner, fill = "fill1")) +
-    geom_line(size = 0.8, color='black') +
+    geom_ribbon(aes(ymin = lowerOuter, ymax = upperOuter, fill = "fill1"), alpha = percentileAlpha) +
+    geom_line(size = 0.8, aes(color='line1')) +
     ylab("Relative biomass") +
     xlab("Year") +
     theme_classic() +
@@ -363,9 +353,12 @@ retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea =
     ) +
     #ncol=NROW(unique(totalSSB$nm)),
     facet_wrap(~ fct + nm,  nrow = NROW(unique(totalB$fct)), scales = scales, labeller = labeller(nm = labelVec)) +
-    scale_fill_manual(name = "Uncertainty in outcomes",
-                      values = colors,
-                      labels = c(innerLab, outerLab))
-  ggsave(filename = paste0(wd, "/", imageName, "_retainBio.png"), device = "png", dpi = dpi, width = 8, height = 3.5*NROW(unique(totalB$fct)), units = "in")
+    scale_color_manual(name = "",
+                       values = c(line1 = lineColor),
+                       labels = "Median")+
+    scale_fill_manual(name = "",
+                      values = c(fill1 = percentileColor),
+                      labels = paste0(as.character(round(100*(percentile[2]-percentile[1]),1)), "% of outcomes"))
+  ggsave(filename = paste0(wd, "/", imageName, "_retainBio.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalSSB$fct)),8), height = 3.5*NROW(unique(totalB$fct)), units = "in")
 }
 

@@ -27,8 +27,8 @@ relSSBscatter(wd =  here("data-raw", "Kala_noUncertainty"),
                 "Lower_option2",
                 "Lower_option3"
               ),
-              #facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3))),
-              facetName = c(as.list(rep("Higher biomass scenario", 6))),
+              facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3))),
+              #facetName = c(as.list(rep("Higher biomass scenario", 6))),
               newLabel = list(
                 "A",
                 "B",
@@ -51,7 +51,7 @@ relSSBseries(wd =  here("data-raw", "Kala_noUncertainty"),
                "Lower_option3"
              ),
              #facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3))),
-             facetName = c(as.list(rep("Higher biomass scenario", 6))),
+             facetName = c(as.list(rep("", 6))),
              # newLabel = list(
              #   "A",
              #   "B",
@@ -61,11 +61,29 @@ relSSBseries(wd =  here("data-raw", "Kala_noUncertainty"),
              #   "F"
              # ),
              chooseArea = 0,
-             percentileOuter = c(0.025, 0.975),
-             percentileInner = c(0.25, 0.75),
-             doHist = FALSE,
+             percentile = c(0.025, 0.975),
+             doHist = TRUE,
              dpi = 300)
 
+
+relSSBseries(wd =  here("data-raw", "Kala_noUncertainty"),
+             fileName = list(
+               "Higher_option1"
+             ),
+             #facetName = c(as.list(rep("Higher biomass scenario", 3)), as.list(rep("Lower biomass scenario", 3))),
+             facetName = c(as.list(rep("", 1))),
+             # newLabel = list(
+             #   "A",
+             #   "B",
+             #   "C",
+             #   "D",
+             #   "E",
+             #   "F"
+             # ),
+             chooseArea = 0,
+             percentile = c(0.025, 0.975),
+             doHist = FALSE,
+             dpi = 300)
 
 
 retainBioSeries(wd =  here("data-raw", "Kala_noUncertainty"),
@@ -88,9 +106,8 @@ retainBioSeries(wd =  here("data-raw", "Kala_noUncertainty"),
              #   "F"
              # ),
              chooseArea = 0,
-             percentileOuter = c(0.025, 0.975),
-             percentileInner = c(0.25, 0.75),
-             doHist = FALSE,
+             percentile = c(0.025, 0.975),
+             doHist = TRUE,
              dpi = 300)
 
 
