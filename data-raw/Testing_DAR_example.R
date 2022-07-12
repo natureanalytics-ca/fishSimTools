@@ -1,8 +1,8 @@
 
 
 library(fishSimGTG)
-#library(fishSimTools)
-devtools::load_all()
+library(fishSimTools)
+#devtools::load_all()
 library(here)
 #--------------
 #Kala
