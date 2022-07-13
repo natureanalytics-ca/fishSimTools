@@ -18,7 +18,7 @@ runProjectionExcel(
 
 )
 
-relSSBscatter(wd =  here("data-raw", "Kala_noUncertainty"),
+X<-relSSBscatter(wd =  here("data-raw", "Kala_noUncertainty"),
               fileName = list(
                 "Higher_option1",
                 "Higher_option2",
@@ -86,7 +86,7 @@ relSSBseries(wd =  here("data-raw", "Kala_noUncertainty"),
              dpi = 300)
 
 
-retainBioSeries(wd =  here("data-raw", "Kala_noUncertainty"),
+X<-retainBioSeries(wd =  here("data-raw", "Kala_noUncertainty"),
              fileName = list(
                "Higher_option1",
                "Higher_option2",

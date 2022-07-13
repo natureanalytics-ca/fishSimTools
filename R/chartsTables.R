@@ -18,10 +18,12 @@
 #' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @param imageName Character. A name for the resulting plot(s)
 #' @param outputDir Directory where the output plot is saved. If NULL, it is set to wd.
+#' @param percentile Vector of length two indicating centered percent of observations to represent uncertainty in the table. For example, 95% centered observations should be entered as c(0.025, 0.975)
+#' @param doPlot
 #' @import stats ggplot2 ggrepel
 #' @export
 
-relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, proYear, dpi = 300, imageName = "Relative_SSB_catch", outputDir = NULL){
+relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, proYear, dpi = 300, imageName = "Relative_SSB_catch", outputDir = NULL, percentile = c(0.025, 0.975), doPlot = TRUE){
 
   catchB_median<-SSB_median<-nm<-NULL
 
@@ -43,7 +45,7 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
       cat_tmp<-sapply(1:data$TimeAreaObj@iterations, FUN=function(x){
         sum(data$dynamics$catchB[getYear,x,]) / sum(data$dynamics$catchB[refYear,x,])
       })
-      totalSSB<-rbind(totalSSB, list(fct = facetName[[i]], nm = ifelse(is.null(newLabel[[i]]), data$titleStrategy, newLabel[[i]]), SSB_median = median(SSB_tmp), catchB_median = median(cat_tmp)))
+      totalSSB<-rbind(totalSSB, list(fct = facetName[[i]], nm = ifelse(is.null(newLabel[[i]]), data$titleStrategy, newLabel[[i]]), SSB_median = median(SSB_tmp), SSB_lower = quantile(SSB_tmp, probs = percentile[1]), SSB_upper = quantile(SSB_tmp, probs = percentile[2]), catchB_median = median(cat_tmp), catchB_lower = quantile(cat_tmp, probs = percentile[1]), catchB_upper = quantile(cat_tmp, probs = percentile[2])))
     } else {#Specific area selected by user
       SSB_tmp<-sapply(1:data$TimeAreaObj@iterations, FUN=function(x){
         data$dynamics$SB[getYear,x,chooseArea] / data$dynamics$SB[refYear,x,chooseArea]
@@ -51,7 +53,7 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
       cat_tmp<-sapply(1:data$TimeAreaObj@iterations, FUN=function(x){
         data$dynamics$catchB[getYear,x,chooseArea] / data$dynamics$catchB[refYear,x,chooseArea]
       })
-      totalSSB<-rbind(totalSSB, list(fct = facetName[[i]], nm = ifelse(is.null(newLabel[[i]]), data$titleStrategy, newLabel[[i]]), SSB_median = median(SSB_tmp), catchB_median = median(cat_tmp)))
+      totalSSB<-rbind(totalSSB, list(fct = facetName[[i]], nm = ifelse(is.null(newLabel[[i]]), data$titleStrategy, newLabel[[i]]), SSB_median = median(SSB_tmp), SSB_lower = quantile(SSB_tmp, probs = percentile[1]), SSB_upper = quantile(SSB_tmp, probs = percentile[2]), catchB_median = median(cat_tmp), catchB_lower = quantile(cat_tmp, probs = percentile[1]), catchB_upper = quantile(cat_tmp, probs = percentile[2])))
     }
   }
 
@@ -132,7 +134,8 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
           legend.position = "none") +
   facet_wrap(~fct, ncol=2)
-  ggsave(filename = paste0(outputDir, "/", imageName, ".png"), device = "png", dpi = dpi, width = min(6*NROW(unique(totalSSB$fct)),7), height = max((3*NROW(unique(totalSSB$fct))/2),4), units = "in")
+  if(doPlot) ggsave(filename = paste0(outputDir, "/", imageName, ".png"), device = "png", dpi = dpi, width = min(6*NROW(unique(totalSSB$fct)),7), height = max((3*NROW(unique(totalSSB$fct))/2),4), units = "in")
+  return(totalSSB)
 }
 
 #---------------------------------------
@@ -299,11 +302,12 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
 #' @param imageName Character. A name for the resulting plot(s)
 #' @param scales From ggplot2::facet_wrap Should scales be fixed ("fixed", the default), free ("free"), or free in one dimension ("free_x", "free_y")?
 #' @param outputDir Directory where the output plot is saved. If NULL, it is set to wd.
+#' @param doPlot
 #' @import ggplot2 ggrepel
 #' @importFrom stats quantile
 #' @export
 
-retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed", outputDir = NULL){
+retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed", outputDir = NULL, doPlot = TRUE){
 
   year<-med<-lower<-upper<-NULL
 
@@ -368,6 +372,10 @@ retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea =
     scale_fill_manual(name = "",
                       values = c(fill1 = percentileColor),
                       labels = paste0(as.character(round(100*(percentile[2]-percentile[1]),1)), "% of outcomes"))
-  ggsave(filename = paste0(outputDir, "/", imageName, "_retainBio.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalB$fct)),8), height = 3.5*NROW(unique(totalB$fct)), units = "in")
+  if(doPlot)  ggsave(filename = paste0(outputDir, "/", imageName, "_retainBio.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalB$fct)),8), height = 3.5*NROW(unique(totalB$fct)), units = "in")
+
+  #Replace labels
+  return(totalB %>%
+           mutate(newName = str_replace_all(as.character(nm), labelVec)))
 }
 
