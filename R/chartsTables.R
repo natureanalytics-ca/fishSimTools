@@ -19,7 +19,7 @@
 #' @param imageName Character. A name for the resulting plot(s)
 #' @param outputDir Directory where the output plot is saved. If NULL, it is set to wd.
 #' @param percentile Vector of length two indicating centered percent of observations to represent uncertainty in the table. For example, 95% centered observations should be entered as c(0.025, 0.975)
-#' @param doPlot
+#' @param doPlot Logical, whether to create plot
 #' @import stats ggplot2 ggrepel
 #' @export
 
@@ -302,7 +302,7 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
 #' @param imageName Character. A name for the resulting plot(s)
 #' @param scales From ggplot2::facet_wrap Should scales be fixed ("fixed", the default), free ("free"), or free in one dimension ("free_x", "free_y")?
 #' @param outputDir Directory where the output plot is saved. If NULL, it is set to wd.
-#' @param doPlot
+#' @param doPlot Logical, whether to create plot
 #' @import ggplot2 ggrepel
 #' @importFrom stats quantile
 #' @export

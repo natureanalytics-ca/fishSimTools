@@ -2,6 +2,7 @@
 
 export(relSSBscatter)
 export(relSSBseries)
+export(retainBioSeries)
 export(runProjectionExcel)
 import(fishSimGTG)
 import(ggplot2)
