@@ -2,7 +2,7 @@
 
 library(fishSimGTG)
 library(fishSimTools)
-#devtools::load_all()
+devtools::load_all()
 library(here)
 #--------------
 #Kala

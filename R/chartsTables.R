@@ -9,7 +9,7 @@
 #'
 #'Plots the ratio of year prior to projection to a specified projection year. Iterations are summarized as the median ratio. Calculation are made for relative SSB (y-axis) and relative catch in weight (a-axis). Saves a chart to the wd. Examples can be found in data-raw/DAR_projection_example.R
 #'
-#' @param wd A working directly where the output of runProjection is saved
+#' @param wd A working directory where the output of runProjection is saved
 #' @param fileName List. List of file names in the working directory
 #' @param facetName List. Plot uses ggplot2 facets. File names can be assigned to facets, thus producing separate plots for a given facet, such a low M scenario vs. a high M scenario.
 #' @param newLabel List. Replacement label for each file.
@@ -17,12 +17,15 @@
 #' @param proYear Numeric. The projection year used to calculate relative change in SSB and catch in weight.
 #' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @param imageName Character. A name for the resulting plot(s)
+#' @param outputDir Directory where the output plot is saved. If NULL, it is set to wd.
 #' @import stats ggplot2 ggrepel
 #' @export
 
-relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, proYear, dpi = 300, imageName = "Relative_SSB_catch"){
+relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, proYear, dpi = 300, imageName = "Relative_SSB_catch", outputDir = NULL){
 
   catchB_median<-SSB_median<-nm<-NULL
+
+  if(is.null(outputDir)) outputDir<-wd
 
   totalSSB<-data.frame()
   areaSSB<-data.frame()
@@ -129,7 +132,7 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
           legend.position = "none") +
   facet_wrap(~fct, ncol=2)
-  ggsave(filename = paste0(wd, "/", imageName, ".png"), device = "png", dpi = dpi, width = min(6*NROW(unique(totalSSB$fct)),7), height = max((3*NROW(unique(totalSSB$fct))/2),4), units = "in")
+  ggsave(filename = paste0(outputDir, "/", imageName, ".png"), device = "png", dpi = dpi, width = min(6*NROW(unique(totalSSB$fct)),7), height = max((3*NROW(unique(totalSSB$fct))/2),4), units = "in")
 }
 
 #---------------------------------------
@@ -154,13 +157,16 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
 #' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @param imageName Character. A name for the resulting plot(s)
 #' @param scales From ggplot2::facet_wrap Should scales be fixed ("fixed", the default), free ("free"), or free in one dimension ("free_x", "free_y")?
+#' @param outputDir Directory where the output plot is saved. If NULL, it is set to wd.
 #' @import ggplot2 ggrepel
 #' @importFrom stats quantile
 #' @export
 
-relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
+relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed", outputDir = NULL){
 
   year<-med<-lower<-upper<-NULL
+
+  if(is.null(outputDir)) outputDir<-wd
 
   totalSSB<-data.frame()
   totalcatchB<-data.frame()
@@ -244,7 +250,7 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
                       values = c(fill1 = percentileColor),
                       labels = paste0(as.character(round(100*(percentile[2]-percentile[1]),1)), "% of outcomes"))
 
-  ggsave(filename = paste0(wd, "/", imageName, "_SSB.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalSSB$fct)),8), height = 3.5*NROW(unique(totalSSB$fct)), units = "in")
+  ggsave(filename = paste0(outputDir, "/", imageName, "_SSB.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalSSB$fct)),8), height = 3.5*NROW(unique(totalSSB$fct)), units = "in")
 
   #Total relative catch weight
   ggplot(totalcatchB, aes(x = year, y = med)) +
@@ -268,7 +274,7 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
     scale_fill_manual(name = "",
                       values = c(fill1 = percentileColor),
                       labels = paste0(as.character(round(100*(percentile[2]-percentile[1]),1)), "% of outcomes"))
-  ggsave(filename = paste0(wd, "/", imageName, "_catchB.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalSSB$fct)),8), height = 3.5*NROW(unique(totalcatchB$fct)), units = "in")
+  ggsave(filename = paste0(outputDir, "/", imageName, "_catchB.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalSSB$fct)),8), height = 3.5*NROW(unique(totalcatchB$fct)), units = "in")
 }
 
 
@@ -292,13 +298,16 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
 #' @param dpi Resolution in dots per inch of the resulting saved chart.
 #' @param imageName Character. A name for the resulting plot(s)
 #' @param scales From ggplot2::facet_wrap Should scales be fixed ("fixed", the default), free ("free"), or free in one dimension ("free_x", "free_y")?
+#' @param outputDir Directory where the output plot is saved. If NULL, it is set to wd.
 #' @import ggplot2 ggrepel
 #' @importFrom stats quantile
 #' @export
 
-retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed"){
+retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed", outputDir = NULL){
 
   year<-med<-lower<-upper<-NULL
+
+  if(is.null(outputDir)) outputDir <- wd
 
   totalB<-data.frame()
   labelVec<-vector()
@@ -359,6 +368,6 @@ retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea =
     scale_fill_manual(name = "",
                       values = c(fill1 = percentileColor),
                       labels = paste0(as.character(round(100*(percentile[2]-percentile[1]),1)), "% of outcomes"))
-  ggsave(filename = paste0(wd, "/", imageName, "_retainBio.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalSSB$fct)),8), height = 3.5*NROW(unique(totalB$fct)), units = "in")
+  ggsave(filename = paste0(outputDir, "/", imageName, "_retainBio.png"), device = "png", dpi = dpi, width = min(5*NROW(unique(totalB$fct)),8), height = 3.5*NROW(unique(totalB$fct)), units = "in")
 }
 
