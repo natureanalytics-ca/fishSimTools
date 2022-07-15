@@ -61,51 +61,47 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
 
   print(NROW(unique(totalSSB$fct)))
   #Total relative SSB
-  ggplot(totalSSB, aes(catchB_median, SSB_median)) +
+  ggplot(data=totalSSB, aes(catchB_median, SSB_median)) +
 
-    geom_rect(
-      aes(
+    annotate(
+      'rect',
       xmin = 0,
       xmax = 1,
       ymin = 0,
-      ymax = 1
-      ),
+      ymax = 1,
       color = "grey",
       fill = "pink",
       alpha = 0.1
     ) +
 
-    geom_rect(
-      aes(
+    annotate(
+      'rect',
       xmin = 0,
       xmax = 1,
       ymin = 1,
-      ymax = max(max(SSB_median)+0.1, 2)
-      ),
+      ymax = max(max(totalSSB$SSB_median)+0.1, 2),
       color = "grey",
       fill = "yellow",
       alpha = 0.05
     ) +
 
-    geom_rect(
-      aes(
+    annotate(
+      'rect',
       xmin = 1,
-      xmax = max(max(catchB_median)+0.1,2),
+      xmax = max(max(totalSSB$catchB_median)+0.1,2),
       ymin = 0,
-      ymax = 1
-      ),
+      ymax = 1,
       color = "grey",
       fill = "yellow",
       alpha = 0.05
     ) +
 
-    geom_rect(
-      aes(
+    annotate(
+      'rect',
       xmin = 1,
-      xmax = max(max(catchB_median)+0.1,2),
+      xmax = max(max(totalSSB$catchB_median)+0.1,2),
       ymin = 1,
-      ymax = max(max(SSB_median)+0.1,2),
-      ),
+      ymax = max(max(totalSSB$SSB_median)+0.1,2),
       color = "grey",
       fill = "green",
       alpha = 0.1
@@ -113,7 +109,7 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
 
     #geom_vline(xintercept = 1, color="lightgrey") +
     #geom_hline(yintercept = 1, colour="lightgrey") +
-    geom_point(size=1) +
+    geom_point( size=1) +
     geom_label_repel(data=totalSSB,
                     aes(catchB_median, SSB_median, label = nm),
                     fontface = 'bold',
@@ -136,7 +132,7 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
           legend.position = "none") +
   facet_wrap(~fct, ncol=2)
-  if(doPlot) ggsave(filename = paste0(outputDir, "/", imageName, ".png"), device = "png", dpi = dpi, width = min(6*NROW(unique(totalSSB$fct)),7), height = max((3*NROW(unique(totalSSB$fct))/2),4), units = "in")
+  if(doPlot) ggsave(filename = paste0(outputDir, "/", imageName, ".png"), plot = p, device = "png", dpi = dpi, width = min(6*NROW(unique(totalSSB$fct)),7), height = max((3*NROW(unique(totalSSB$fct))/2),4), units = "in")
   return(totalSSB)
 }
 
