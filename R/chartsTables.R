@@ -132,7 +132,7 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
           legend.position = "none") +
   facet_wrap(~fct, ncol=2)
-  if(doPlot) ggsave(filename = paste0(outputDir, "/", imageName, ".png"), plot = p, device = "png", dpi = dpi, width = min(6*NROW(unique(totalSSB$fct)),7), height = max((3*NROW(unique(totalSSB$fct))/2),4), units = "in")
+  if(doPlot) ggsave(filename = paste0(outputDir, "/", imageName, ".png"), device = "png", dpi = dpi, width = min(6*NROW(unique(totalSSB$fct)),7), height = max((3*NROW(unique(totalSSB$fct))/2),4), units = "in")
   return(totalSSB)
 }
 
