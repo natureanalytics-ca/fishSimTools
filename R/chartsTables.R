@@ -159,12 +159,12 @@ relSSBscatter<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0
 #' @param imageName Character. A name for the resulting plot(s)
 #' @param scales From ggplot2::facet_wrap Should scales be fixed ("fixed", the default), free ("free"), or free in one dimension ("free_x", "free_y")?
 #' @param outputDir Directory where the output plot is saved. If NULL, it is set to wd.
-#' @param stripTextsize Size of facet labels, default is 8
+#' @param stripTextSize Size of facet labels, default is 8
 #' @import ggplot2 ggrepel
 #' @importFrom stats quantile
 #' @export
 
-relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed", outputDir = NULL, stripTextsize = 8){
+relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed", outputDir = NULL, stripTextSize = 8){
 
   year<-med<-lower<-upper<-NULL
 
@@ -236,8 +236,8 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
     ylab("Relative biomass") +
     xlab("Year") +
     theme_classic() +
-    theme(strip.text.x=element_text(colour = "black", size=stripTextsize, face="bold"),
-          strip.text.y=element_text(colour = "black", size=stripTextsize, face="bold"),
+    theme(strip.text.x=element_text(colour = "black", size=stripTextSize, face="bold"),
+          strip.text.y=element_text(colour = "black", size=stripTextSize, face="bold"),
           strip.background = element_rect(fill ="lightgrey"),
           axis.text=element_text(size=6),
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
@@ -262,8 +262,8 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
     ylab("Relative catch weight") +
     xlab("Year") +
     theme_classic() +
-    theme(strip.text.x=element_text(colour = "black", size=stripTextsize, face="bold"),
-          strip.text.y=element_text(colour = "black", size=stripTextsize, face="bold"),
+    theme(strip.text.x=element_text(colour = "black", size=stripTextSize, face="bold"),
+          strip.text.y=element_text(colour = "black", size=stripTextSize, face="bold"),
           strip.background = element_rect(fill ="lightgrey"),
           axis.text=element_text(size=6),
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
@@ -302,12 +302,12 @@ relSSBseries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0,
 #' @param scales From ggplot2::facet_wrap Should scales be fixed ("fixed", the default), free ("free"), or free in one dimension ("free_x", "free_y")?
 #' @param outputDir Directory where the output plot is saved. If NULL, it is set to wd.
 #' @param doPlot Logical, whether to create plot
-#' @param stripTextsize Size of facet labels. Default is 8
+#' @param stripTextSize Size of facet labels. Default is 8
 #' @import ggplot2 ggrepel
 #' @importFrom stats quantile
 #' @export
 
-retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed", outputDir = NULL, doPlot = TRUE, stripTextsize = 8){
+retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea = 0, percentile = c(0.025, 0.975), percentileColor = "#0096d6", percentileAlpha = 0.5, lineColor = "black", doHist = FALSE, dpi = 300, imageName = "Relative_timeSeries", scales = "fixed", outputDir = NULL, doPlot = TRUE, stripTextSize = 8){
 
   year<-med<-lower<-upper<-NULL
 
@@ -357,8 +357,8 @@ retainBioSeries<-function(wd, fileName, facetName, newLabel = NULL, chooseArea =
     ylab("Relative biomass") +
     xlab("Year") +
     theme_classic() +
-    theme(strip.text.x=element_text(colour = "black", size=stripTextsize, face="bold"),
-          strip.text.y=element_text(colour = "black", size=stripTextsize, face="bold"),
+    theme(strip.text.x=element_text(colour = "black", size=stripTextSize, face="bold"),
+          strip.text.y=element_text(colour = "black", size=stripTextSize, face="bold"),
           strip.background = element_rect(fill ="lightgrey"),
           axis.text=element_text(size=6),
           panel.border = element_rect(linetype = "solid", colour = "black", fill=NA),
